@@ -1,5 +1,4 @@
 Flask==3.1.1
-Flask-MySQL==1.6.0
 PyMySQL==1.1.1
 google-genai
 python-dotenv
