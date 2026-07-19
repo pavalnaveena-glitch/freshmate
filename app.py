@@ -2,24 +2,76 @@ import os
 from dotenv import load_dotenv
 from google import genai
 from flask import Flask, render_template, request, redirect, session
-from flaskext.mysql import MySQL
-import pymysql
+import sqlite3
+DATABASE = "database.db"
+
+def get_db_connection():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = "freshmate_secret_key"
 
-# -------------------------
-# MySQL Configuration
-# -------------------------
-mysql = MySQL()
 
-app.config['MYSQL_DATABASE_HOST'] = os.getenv("MYSQL_HOST", "localhost")
-app.config['MYSQL_DATABASE_USER'] = os.getenv("MYSQL_USER", "root")
-app.config['MYSQL_DATABASE_PASSWORD'] = os.getenv("MYSQL_PASSWORD", "")
-app.config['MYSQL_DATABASE_DB'] = os.getenv("MYSQL_DB", "freshmate_ai")
+def create_table():
+    conn = get_db_connection()
 
-mysql.init_app(app)
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT UNIQUE,
+        password TEXT
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS events(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        date TEXT,
+        description TEXT
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS clubs(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        description TEXT
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS faculty(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        department TEXT
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS timetable(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        subject TEXT,
+        time TEXT
+    )
+    """)
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS notices(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        notice_date TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+create_table()
 
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
@@ -42,25 +94,25 @@ def register():
         email = request.form['email']
         password = request.form['password']
 
-        conn = mysql.connect()
-        cur = conn.cursor()
-        # Check whether email already exists
-        cur.execute("SELECT * FROM students WHERE email=%s", (email,))
-        user = cur.fetchone()
+        conn = get_db_connection()
+
+        user = conn.execute(
+            "SELECT * FROM users WHERE email=?",
+            (email,)
+        ).fetchone()
+        
 
         if user:
-            cur.close()
             conn.close()
             return "Email already registered! Please login."
 
         # Insert new student
-        cur.execute(
-            "INSERT INTO students(name, email, password) VALUES(%s, %s, %s)",
-            (name, email, password)
+        conn.execute(
+            "INSERT INTO users(name,email,password) VALUES(?,?,?)",
+            (name,email,password)
         )
 
         conn.commit()
-        cur.close()
         conn.close()
         
         return redirect('/login')
@@ -78,26 +130,25 @@ def login():
         email = request.form['email']
         password = request.form['password']
         
-        conn = mysql.connect()
-        cur = conn.cursor()
+        conn = get_db_connection()
 
-        cur.execute(
-            "SELECT * FROM students WHERE email=%s AND password=%s",
-            (email, password)
-        )
+        user = conn.execute(
+            "SELECT * FROM users WHERE email=? AND password=?",
+            (email,password)
+        ).fetchone()
 
-        user = cur.fetchone()
-
-        cur.close()
         conn.close()
 
+        
+    
+
         if user:
-            session['user'] = user[1]
+            session['user'] = user['name']
             return redirect('/dashboard')
         else:
             return "Invalid Email or Password"
-    return render_template('login.html')
-
+    
+    return render_template("login.html")
 # -------------------------
 # Dashboard
 # -------------------------
@@ -111,39 +162,37 @@ def dashboard():
 @app.route('/events')
 def events():
 
-    conn = mysql.connect()
-    cur = conn.cursor()
+    conn = get_db_connection()
+    
 
-    cur.execute("SELECT * FROM events")
-
-    event_data = cur.fetchall()
-
-    cur.close()
+    event_data = conn.execute("SELECT * FROM events").fetchall()
     conn.close()
 
     return render_template("events.html", events=event_data)
 # -------------------------
 # Clubs
 # -------------------------
+# -------------------------
+# Clubs
+# -------------------------
 @app.route('/clubs')
 def clubs():
 
-    conn = mysql.connect()
-    cur = conn.cursor()
+    conn = get_db_connection()
 
-    cur.execute("SELECT * FROM clubs")
+    club_data = conn.execute(
+        "SELECT * FROM clubs"
+    ).fetchall()
 
-    club_data = cur.fetchall()
-
-    cur.close()
     conn.close()
+
     return render_template("clubs.html", clubs=club_data)
 
 
 @app.route('/faculty')
 def faculty():
 
-    conn = mysql.connect()
+    conn=get_db_connection()
     cur = conn.cursor()
 
     cur.execute("SELECT * FROM faculty")
@@ -156,8 +205,8 @@ def faculty():
 
 @app.route('/timetable')
 def timetable():
+    conn=get_db_connection()
 
-    conn = mysql.connect()
     cur = conn.cursor()
 
     cur.execute("SELECT * FROM timetable")
@@ -172,7 +221,7 @@ def timetable():
 @app.route('/notices')
 def notices():
 
-    conn = mysql.connect()
+    conn=get_db_connection()
     cur = conn.cursor()
 
     cur.execute("SELECT * FROM notices ORDER BY notice_date DESC")
@@ -230,10 +279,10 @@ Thank you for your patience! 😊
 @app.route('/profile')
 def profile():
 
-    conn = mysql.connect()
+    conn=get_db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM students LIMIT 1")
+    cur.execute("SELECT * FROM users LIMIT 1")
 
     student = cur.fetchone()
 
