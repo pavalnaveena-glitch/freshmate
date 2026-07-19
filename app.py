@@ -10,13 +10,14 @@ load_dotenv()
 
 def get_db_connection():
     return pymysql.connect(
-        host=os.getenv("MYSQLHOST"),
-        user=os.getenv("MYSQLUSER"),
-        password=os.getenv("MYSQLPASSWORD"),
-        database=os.getenv("MYSQLDATABASE"),
-        port=int(os.getenv("MYSQLPORT")),
+        host=os.getenv("MYSQL_HOST"),
+        user=os.getenv("MYSQL_USER"),
+        password=os.getenv("MYSQL_PASSWORD"),
+        database=os.getenv("MYSQL_DATABASE"),
+        port=int(os.getenv("MYSQL_PORT")),
         cursorclass=pymysql.cursors.DictCursor,
-        autocommit=True
+        autocommit=True,
+        ssl={"ssl": {}}
     )
 load_dotenv()
 
@@ -24,71 +25,6 @@ app = Flask(__name__)
 app.secret_key = "freshmate_secret_key"
 
 
-def create_table():
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100),
-        email VARCHAR(100) UNIQUE,
-        password VARCHAR(100)
-    )
-    """)
-
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS events(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(100),
-        date VARCHAR(50),
-        description TEXT
-    )
-    """)
-
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS clubs(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100),
-        description TEXT
-    )
-    """)
-
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS faculty(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100),
-        department VARCHAR(100)
-    )
-    """)
-
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS timetable(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        subject VARCHAR(100),
-        time VARCHAR(100)
-    )
-    """)
-
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS notices(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(200),
-        notice_date VARCHAR(50)
-    )
-    """)
-
-
-    conn.commit()
-    cursor.close()
-    conn.close()
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
@@ -339,5 +275,4 @@ def logout():
 # Run Flask
 # -------------------------
 if __name__ == '__main__':
-    create_table()
     app.run(debug=True)
