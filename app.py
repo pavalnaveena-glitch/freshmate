@@ -1,7 +1,10 @@
 import os
+from dotenv import load_dotenv
 from google import genai
 from flask import Flask, render_template, request, redirect, session
-from flask_mysqldb import MySQL
+from flaskext.mysql import MySQL
+import pymysql
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = "freshmate_secret_key"
@@ -9,12 +12,15 @@ app.secret_key = "freshmate_secret_key"
 # -------------------------
 # MySQL Configuration
 # -------------------------
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Freshmate@123'
-app.config['MYSQL_DB'] = 'freshmate_ai'
+mysql = MySQL()
 
-mysql = MySQL(app)
+app.config['MYSQL_DATABASE_HOST'] = os.getenv("MYSQL_HOST", "localhost")
+app.config['MYSQL_DATABASE_USER'] = os.getenv("MYSQL_USER", "root")
+app.config['MYSQL_DATABASE_PASSWORD'] = os.getenv("MYSQL_PASSWORD", "")
+app.config['MYSQL_DATABASE_DB'] = os.getenv("MYSQL_DB", "freshmate_ai")
+
+mysql.init_app(app)
+
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
@@ -36,14 +42,15 @@ def register():
         email = request.form['email']
         password = request.form['password']
 
-        cur = mysql.connection.cursor()
-
+        conn = mysql.connect()
+        cur = conn.cursor()
         # Check whether email already exists
         cur.execute("SELECT * FROM students WHERE email=%s", (email,))
         user = cur.fetchone()
 
         if user:
             cur.close()
+            conn.close()
             return "Email already registered! Please login."
 
         # Insert new student
@@ -52,9 +59,10 @@ def register():
             (name, email, password)
         )
 
-        mysql.connection.commit()
+        conn.commit()
         cur.close()
-
+        conn.close()
+        
         return redirect('/login')
 
     return render_template('register.html')
@@ -69,8 +77,9 @@ def login():
 
         email = request.form['email']
         password = request.form['password']
-
-        cur = mysql.connection.cursor()
+        
+        conn = mysql.connect()
+        cur = conn.cursor()
 
         cur.execute(
             "SELECT * FROM students WHERE email=%s AND password=%s",
@@ -80,13 +89,13 @@ def login():
         user = cur.fetchone()
 
         cur.close()
+        conn.close()
 
         if user:
-            session['user'] = user[1]   # Store student name
+            session['user'] = user[1]
             return redirect('/dashboard')
         else:
             return "Invalid Email or Password"
-
     return render_template('login.html')
 
 # -------------------------
@@ -102,13 +111,15 @@ def dashboard():
 @app.route('/events')
 def events():
 
-    cur = mysql.connection.cursor()
+    conn = mysql.connect()
+    cur = conn.cursor()
 
     cur.execute("SELECT * FROM events")
 
     event_data = cur.fetchall()
 
     cur.close()
+    conn.close()
 
     return render_template("events.html", events=event_data)
 # -------------------------
@@ -117,53 +128,59 @@ def events():
 @app.route('/clubs')
 def clubs():
 
-    cur = mysql.connection.cursor()
+    conn = mysql.connect()
+    cur = conn.cursor()
 
     cur.execute("SELECT * FROM clubs")
 
     club_data = cur.fetchall()
 
     cur.close()
-
+    conn.close()
     return render_template("clubs.html", clubs=club_data)
 
 
 @app.route('/faculty')
 def faculty():
 
-    cur = mysql.connection.cursor()
+    conn = mysql.connect()
+    cur = conn.cursor()
 
     cur.execute("SELECT * FROM faculty")
 
     faculty_data = cur.fetchall()
 
     cur.close()
-
+    conn.close()
     return render_template("faculty.html", faculty=faculty_data)
 
 @app.route('/timetable')
 def timetable():
 
-    cur = mysql.connection.cursor()
+    conn = mysql.connect()
+    cur = conn.cursor()
 
     cur.execute("SELECT * FROM timetable")
 
     timetable_data = cur.fetchall()
 
     cur.close()
+    conn.close()
 
     return render_template("timetable.html", timetable=timetable_data)
 
 @app.route('/notices')
 def notices():
 
-    cur = mysql.connection.cursor()
+    conn = mysql.connect()
+    cur = conn.cursor()
 
     cur.execute("SELECT * FROM notices ORDER BY notice_date DESC")
 
     notice_data = cur.fetchall()
 
     cur.close()
+    conn.close()
 
     return render_template("notices.html", notices=notice_data)
 
@@ -185,23 +202,43 @@ def chatbot():
                 model="gemini-2.5-flash-lite",
                 contents=question
             )
+
             answer = response.text
 
-        except Exception as e:
-            answer = "⚠️ AI service is temporarily unavailable. Please check your Gemini API key or quota."
+        except Exception:
+            answer = """
+🤖 FreshMate AI
+
+I'm sorry, I couldn't answer your question right now.
+
+💭 Thinking...
+
+The AI service is currently unavailable. Please try again in a few moments.
+
+Meanwhile, you can continue exploring FreshMate AI features such as:
+• 📅 Events
+• 👥 Clubs
+• 👨‍🏫 Faculty
+• 📝 Notices
+• 📖 Timetable
+
+Thank you for your patience! 😊
+"""
 
     return render_template("chatbot.html", answer=answer)
 
 @app.route('/profile')
 def profile():
 
-    cur = mysql.connection.cursor()
+    conn = mysql.connect()
+    cur = conn.cursor()
 
     cur.execute("SELECT * FROM students LIMIT 1")
 
     student = cur.fetchone()
 
     cur.close()
+    conn.close()
 
     return render_template("profile.html", student=student)
 
