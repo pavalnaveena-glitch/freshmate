@@ -2,13 +2,22 @@ import os
 from dotenv import load_dotenv
 from google import genai
 from flask import Flask, render_template, request, redirect, session
-import sqlite3
-DATABASE = "database.db"
+import pymysql
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return pymysql.connect(
+        host=os.getenv("MYSQLHOST"),
+        user=os.getenv("MYSQLUSER"),
+        password=os.getenv("MYSQLPASSWORD"),
+        database=os.getenv("MYSQLDATABASE"),
+        port=int(os.getenv("MYSQLPORT")),
+        cursorclass=pymysql.cursors.DictCursor,
+        autocommit=True
+    )
 load_dotenv()
 
 app = Flask(__name__)
@@ -16,87 +25,70 @@ app.secret_key = "freshmate_secret_key"
 
 
 def create_table():
+
     conn = get_db_connection()
+    cursor = conn.cursor()
 
-    conn.execute("""
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        email TEXT UNIQUE,
-        password TEXT
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100),
+        email VARCHAR(100) UNIQUE,
+        password VARCHAR(100)
     )
     """)
-    conn.execute("""
-INSERT OR IGNORE INTO users (name, email, password)
-VALUES (?, ?, ?)
-""", ("Admin", "admin@gmail.com", "1234"))
 
-    conn.execute("""
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS events(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT,
-        date TEXT,
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(100),
+        date VARCHAR(50),
         description TEXT
     )
     """)
-    conn.execute("""
-INSERT OR IGNORE INTO events (id, title, date, description)
-VALUES (1, 'AI Workshop', '2026-08-10', 'Workshop on Artificial Intelligence')
-""")
 
-    conn.execute("""
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS clubs(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100),
         description TEXT
     )
     """)
-    conn.execute("""
-INSERT OR IGNORE INTO clubs (id, name, description)
-VALUES (1, 'Coding Club', 'Learn programming and participate in coding contests')
-""")
 
-    conn.execute("""
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS faculty(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        department TEXT
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100),
+        department VARCHAR(100)
     )
     """)
-    conn.execute("""
-INSERT OR IGNORE INTO faculty (id, name, department)
-VALUES (1, 'Dr. Priya', 'Computer Science')
-""")
 
-    conn.execute("""
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS timetable(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        subject TEXT,
-        time TEXT
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        subject VARCHAR(100),
+        time VARCHAR(100)
     )
     """)
-    conn.execute("""
-INSERT OR IGNORE INTO timetable (id, subject, time)
-VALUES (1, 'Python Programming', '10:00 AM - 11:00 AM')
-""")
 
-    conn.execute("""
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS notices(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT,
-        notice_date TEXT
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(200),
+        notice_date VARCHAR(50)
     )
     """)
-    conn.execute("""
-INSERT OR IGNORE INTO notices (id, title, notice_date)
-VALUES (1, 'Semester Exams Start', '2026-08-15')
-""")
+
 
     conn.commit()
+    cursor.close()
     conn.close()
-
-create_table()
-
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
@@ -112,6 +104,7 @@ def home():
 # -------------------------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+
     if request.method == 'POST':
 
         name = request.form['name']
@@ -119,33 +112,41 @@ def register():
         password = request.form['password']
 
         conn = get_db_connection()
+        cursor = conn.cursor()
 
-        user = conn.execute(
-            "SELECT * FROM users WHERE email=?",
+        # Check existing email
+        cursor.execute(
+            "SELECT * FROM users WHERE email=%s",
             (email,)
-        ).fetchone()
-        
+        )
+
+        user = cursor.fetchone()
 
         if user:
+            cursor.close()
             conn.close()
             return "Email already registered! Please login."
 
-        # Insert new student
-        conn.execute(
-            "INSERT INTO users(name,email,password) VALUES(?,?,?)",
-            (name,email,password)
+
+        # Insert new user
+        cursor.execute(
+            "INSERT INTO users(name,email,password) VALUES(%s,%s,%s)",
+            (name, email, password)
         )
 
         conn.commit()
+
+        cursor.close()
         conn.close()
-        
+
         return redirect('/login')
 
-    return render_template('register.html')
 
+    return render_template('register.html')
 # -------------------------
 # Login
 # -------------------------
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 
@@ -153,25 +154,31 @@ def login():
 
         email = request.form['email']
         password = request.form['password']
-        
+
         conn = get_db_connection()
+        cursor = conn.cursor()
 
-        user = conn.execute(
-            "SELECT * FROM users WHERE email=? AND password=?",
-            (email,password)
-        ).fetchone()
 
+        cursor.execute(
+            "SELECT * FROM users WHERE email=%s AND password=%s",
+            (email, password)
+        )
+
+        user = cursor.fetchone()
+
+
+        cursor.close()
         conn.close()
 
-        
-    
 
         if user:
             session['user'] = user['name']
             return redirect('/dashboard')
+
         else:
             return "Invalid Email or Password"
-    
+
+
     return render_template("login.html")
 # -------------------------
 # Dashboard
@@ -187,15 +194,16 @@ def dashboard():
 def events():
 
     conn = get_db_connection()
-    
+    cursor = conn.cursor()
 
-    event_data = conn.execute("SELECT * FROM events").fetchall()
+    cursor.execute("SELECT * FROM events")
+
+    event_data = cursor.fetchall()
+
+    cursor.close()
     conn.close()
 
     return render_template("events.html", events=event_data)
-# -------------------------
-# Clubs
-# -------------------------
 # -------------------------
 # Clubs
 # -------------------------
@@ -203,11 +211,13 @@ def events():
 def clubs():
 
     conn = get_db_connection()
+    cursor = conn.cursor()
 
-    club_data = conn.execute(
-        "SELECT * FROM clubs"
-    ).fetchall()
+    cursor.execute("SELECT * FROM clubs")
 
+    club_data = cursor.fetchall()
+
+    cursor.close()
     conn.close()
 
     return render_template("clubs.html", clubs=club_data)
@@ -216,28 +226,29 @@ def clubs():
 @app.route('/faculty')
 def faculty():
 
-    conn=get_db_connection()
-    cur = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    cur.execute("SELECT * FROM faculty")
+    cursor.execute("SELECT * FROM faculty")
 
-    faculty_data = cur.fetchall()
+    faculty_data = cursor.fetchall()
 
-    cur.close()
+    cursor.close()
     conn.close()
+
     return render_template("faculty.html", faculty=faculty_data)
 
 @app.route('/timetable')
 def timetable():
-    conn=get_db_connection()
 
-    cur = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    cur.execute("SELECT * FROM timetable")
+    cursor.execute("SELECT * FROM timetable")
 
-    timetable_data = cur.fetchall()
+    timetable_data = cursor.fetchall()
 
-    cur.close()
+    cursor.close()
     conn.close()
 
     return render_template("timetable.html", timetable=timetable_data)
@@ -245,14 +256,16 @@ def timetable():
 @app.route('/notices')
 def notices():
 
-    conn=get_db_connection()
-    cur = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    cur.execute("SELECT * FROM notices ORDER BY notice_date DESC")
+    cursor.execute(
+        "SELECT * FROM notices ORDER BY notice_date DESC"
+    )
 
-    notice_data = cur.fetchall()
+    notice_data = cursor.fetchall()
 
-    cur.close()
+    cursor.close()
     conn.close()
 
     return render_template("notices.html", notices=notice_data)
@@ -303,14 +316,16 @@ Thank you for your patience! 😊
 @app.route('/profile')
 def profile():
 
-    conn=get_db_connection()
-    cur = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    cur.execute("SELECT * FROM users LIMIT 1")
+    cursor.execute(
+        "SELECT * FROM users LIMIT 1"
+    )
 
-    student = cur.fetchone()
+    student = cursor.fetchone()
 
-    cur.close()
+    cursor.close()
     conn.close()
 
     return render_template("profile.html", student=student)
@@ -324,4 +339,5 @@ def logout():
 # Run Flask
 # -------------------------
 if __name__ == '__main__':
+    create_table()
     app.run(debug=True)
