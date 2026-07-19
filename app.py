@@ -26,6 +26,10 @@ def create_table():
         password TEXT
     )
     """)
+    conn.execute("""
+INSERT OR IGNORE INTO users (name, email, password)
+VALUES (?, ?, ?)
+""", ("Admin", "admin@gmail.com", "1234"))
 
     conn.execute("""
     CREATE TABLE IF NOT EXISTS events(
@@ -35,6 +39,10 @@ def create_table():
         description TEXT
     )
     """)
+    conn.execute("""
+INSERT OR IGNORE INTO events (id, title, date, description)
+VALUES (1, 'AI Workshop', '2026-08-10', 'Workshop on Artificial Intelligence')
+""")
 
     conn.execute("""
     CREATE TABLE IF NOT EXISTS clubs(
@@ -43,6 +51,10 @@ def create_table():
         description TEXT
     )
     """)
+    conn.execute("""
+INSERT OR IGNORE INTO clubs (id, name, description)
+VALUES (1, 'Coding Club', 'Learn programming and participate in coding contests')
+""")
 
     conn.execute("""
     CREATE TABLE IF NOT EXISTS faculty(
@@ -51,6 +63,10 @@ def create_table():
         department TEXT
     )
     """)
+    conn.execute("""
+INSERT OR IGNORE INTO faculty (id, name, department)
+VALUES (1, 'Dr. Priya', 'Computer Science')
+""")
 
     conn.execute("""
     CREATE TABLE IF NOT EXISTS timetable(
@@ -59,6 +75,10 @@ def create_table():
         time TEXT
     )
     """)
+    conn.execute("""
+INSERT OR IGNORE INTO timetable (id, subject, time)
+VALUES (1, 'Python Programming', '10:00 AM - 11:00 AM')
+""")
 
     conn.execute("""
     CREATE TABLE IF NOT EXISTS notices(
@@ -67,6 +87,10 @@ def create_table():
         notice_date TEXT
     )
     """)
+    conn.execute("""
+INSERT OR IGNORE INTO notices (id, title, notice_date)
+VALUES (1, 'Semester Exams Start', '2026-08-15')
+""")
 
     conn.commit()
     conn.close()
