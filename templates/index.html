@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshMate AI</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<!-- Navbar Start -->
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
+
+<div class="container">
+
+<a class="navbar-brand fw-bold" href="#">
+🎓 FreshMate AI
+</a>
+
+<button class="navbar-toggler"
+type="button"
+data-bs-toggle="collapse"
+data-bs-target="#navbarNav">
+
+<span class="navbar-toggler-icon"></span>
+
+</button>
+
+<div class="collapse navbar-collapse"
+id="navbarNav">
+
+<ul class="navbar-nav ms-auto">
+
+<li class="nav-item">
+<a class="nav-link active" href="#">Home</a>
+</li>
+
+<li class="nav-item">
+<a class="nav-link" href="#">Events</a>
+</li>
+
+<li class="nav-item">
+<a class="nav-link" href="#">Clubs</a>
+</li>
+
+<li class="nav-item">
+<a class="nav-link" href="#">Faculty</a>
+</li>
+
+<li class="nav-item">
+<a class="nav-link" href="#">Timetable</a>
+</li>
+
+<li class="nav-item">
+<a class="nav-link" href="#">AI Chatbot</a>
+</li>
+
+<li class="nav-item">
+<a class="btn btn-light ms-3" href="/login">
+Login
+</a>
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</nav>
+
+<!-- Navbar End -->
+
+<!-- Hero Section -->
+
+<section class="bg-light py-5">
+
+<div class="container">
+
+<div class="row align-items-center">
+
+<div class="col-lg-6">
+
+<h1 class="display-4 fw-bold">
+
+Welcome to <span class="text-primary">FreshMate AI</span>
+
+</h1>
+
+<p class="lead mt-3">
+
+Your AI-powered campus companion that helps freshers explore events, clubs, faculty, timetables, and campus resources—all in one place.
+
+</p>
+
+<button class="btn btn-primary btn-lg mt-3">
+
+Get Started
+
+</button>
+
+<button class="btn btn-outline-primary btn-lg mt-3">
+
+Explore Campus
+
+</button>
+
+</div>
+
+<div class="col-lg-6 text-center">
+
+<img src="{{ url_for('static', filename='images/hero.jpg') }}"
+class="img-fluid"
+alt="Campus">
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- Features Section -->
+
+<section class="container py-5">
+
+<h2 class="text-center fw-bold mb-5">
+Our Features
+</h2>
+
+<div class="row g-4">
+
+<div class="col-md-4">
+<div class="card shadow h-100 text-center p-4">
+<h1>🤖</h1>
+<h4>AI Chatbot</h4>
+<p>Ask questions about campus, admissions, clubs, faculty, and events using Google Gemini AI.</p>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card shadow h-100 text-center p-4">
+<h1>📅</h1>
+<h4>Events</h4>
+<p>Discover orientation programs, workshops, hackathons, and cultural events.</p>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card shadow h-100 text-center p-4">
+<h1>🎭</h1>
+<h4>Clubs</h4>
+<p>Explore technical, sports, and cultural clubs and register online.</p>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card shadow h-100 text-center p-4">
+<h1>👨‍🏫</h1>
+<h4>Faculty</h4>
+<p>View faculty details, office timings, and department information.</p>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card shadow h-100 text-center p-4">
+<h1>📚</h1>
+<h4>Timetable</h4>
+<p>Check your daily and weekly class schedule anytime.</p>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card shadow h-100 text-center p-4">
+<h1>📢</h1>
+<h4>Notice Board</h4>
+<p>Stay updated with the latest college announcements and circulars.</p>
+</div>
+</div>
+
+</div>
+
+</section>
+
+<!-- Upcoming Events -->
+
+<section class="container py-5">
+
+<h2 class="text-center fw-bold mb-5 text-primary">
+Upcoming Events
+</h2>
+
+<div class="row">
+
+<div class="col-md-4 mb-4">
+
+<div class="card shadow-lg">
+
+<div class="card-body">
+
+<h4>🎉 Freshers Welcome</h4>
+
+<p>Date: 25 July 2026</p>
+
+<p>Venue: College Auditorium</p>
+
+<a href="#" class="btn btn-primary">
+Register
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-md-4 mb-4">
+
+<div class="card shadow-lg">
+
+<div class="card-body">
+
+<h4>💻 AI Workshop</h4>
+
+<p>Date: 28 July 2026</p>
+
+<p>Venue: Seminar Hall</p>
+
+<a href="#" class="btn btn-success">
+Register
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-md-4 mb-4">
+
+<div class="card shadow-lg">
+
+<div class="card-body">
+
+<h4>🚀 Hackathon</h4>
+
+<p>Date: 30 July 2026</p>
+
+<p>Venue: Innovation Lab</p>
+
+<a href="#" class="btn btn-warning">
+Register
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section class="bg-primary text-white py-5">
+
+<div class="container text-center">
+
+<h2 class="fw-bold">Why Choose FreshMate AI?</h2>
+
+<div class="row mt-5">
+
+<div class="col-md-3">
+<h1>🤖</h1>
+<h5>AI Assistant</h5>
+<p>24/7 campus guidance.</p>
+</div>
+
+<div class="col-md-3">
+<h1>📅</h1>
+<h5>Events</h5>
+<p>Never miss college activities.</p>
+</div>
+
+<div class="col-md-3">
+<h1>👨‍🏫</h1>
+<h5>Faculty</h5>
+<p>Know your professors easily.</p>
+</div>
+
+<div class="col-md-3">
+<h1>🎭</h1>
+<h5>Clubs</h5>
+<p>Join your favorite communities.</p>
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- Testimonials -->
+
+<section class="bg-light py-5">
+
+<div class="container">
+
+<h2 class="text-center fw-bold mb-5">
+What Freshers Say
+</h2>
+
+<div class="row">
+
+<div class="col-md-4">
+<div class="card shadow p-4">
+<p>"FreshMate AI helped me find my classes and clubs easily!"</p>
+<h5>- Priya</h5>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card shadow p-4">
+<p>"The AI chatbot answered all my questions during orientation."</p>
+<h5>- Rahul</h5>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card shadow p-4">
+<p>"A very useful portal for every new student."</p>
+<h5>- Ananya</h5>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- Call To Action -->
+
+<section class="bg-primary text-white text-center py-5">
+
+<div class="container">
+
+<h2>Ready to Begin Your College Journey?</h2>
+
+<p class="mt-3">
+Join FreshMate AI today and explore your campus with confidence.
+</p>
+
+<a href="#" class="btn btn-light btn-lg mt-3">
+Register Now
+</a>
+
+</div>
+
+</section>
+
+<footer class="bg-dark text-white text-center p-4">
+
+<h4>FreshMate AI</h4>
+
+<p>Your Smart Campus Companion</p>
+
+<p>© 2026 FreshMate AI | All Rights Reserved</p>
+
+</footer>
+
+<!-- Bootstrap JS -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

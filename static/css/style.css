@@ -1,0 +1,45 @@
+body{
+    font-family: Arial, sans-serif;
+}
+
+.navbar{
+    padding:15px;
+}
+
+.hero{
+    min-height:80vh;
+}
+
+.btn{
+    border-radius:30px;
+}
+.card{
+    border:none;
+    border-radius:20px;
+    transition:0.4s;
+}
+
+.card:hover{
+    transform:translateY(-10px);
+}
+
+h1{
+    color:#2563EB;
+}
+.card{
+    transition:0.4s;
+}
+
+.card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 15px 30px rgba(0,0,0,0.2);
+}
+
+section{
+    padding-top:70px;
+    padding-bottom:70px;
+}
+
+h2{
+    font-weight:bold;
+}
