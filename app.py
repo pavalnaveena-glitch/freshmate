@@ -12,6 +12,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def get_db_connection():
+    print("HOST =", os.getenv("MYSQLHOST"))
+    print("PORT =", os.getenv("MYSQLPORT"))
+    print("USER =", os.getenv("MYSQLUSER"))
+    print("DATABASE =", os.getenv("MYSQLDATABASE"))
+
     conn = pymysql.connect(
         host=os.getenv("MYSQLHOST"),
         user=os.getenv("MYSQLUSER"),
@@ -22,6 +27,8 @@ def get_db_connection():
         autocommit=True,
         ssl={"ssl": {}}
     )
+
+    return conn
 
     cursor = conn.cursor()
 
@@ -120,7 +127,7 @@ def login():
 
         if student:
             session['email'] = student['email']
-            session['name'] = student['name']
+            session['name'] = student['username']
 
             return redirect('/dashboard')
 
