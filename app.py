@@ -1,4 +1,7 @@
 import os
+
+print("Current folder:", os.getcwd())
+print("Templates:", os.listdir("templates"))
 from dotenv import load_dotenv
 from google import genai
 from flask import Flask, render_template, request, redirect, session
@@ -9,17 +12,28 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def get_db_connection():
-    return pymysql.connect(
-        host=os.getenv("MYSQL_HOST"),
-        user=os.getenv("MYSQL_USER"),
-        password=os.getenv("MYSQL_PASSWORD"),
-        database=os.getenv("MYSQL_DATABASE"),
-        port=int(os.getenv("MYSQL_PORT")),
+    conn = pymysql.connect(
+        host=os.getenv("MYSQLHOST"),
+        user=os.getenv("MYSQLUSER"),
+        password=os.getenv("MYSQLPASSWORD"),
+        database=os.getenv("MYSQLDATABASE"),
+        port=int(os.getenv("MYSQLPORT")),
         cursorclass=pymysql.cursors.DictCursor,
         autocommit=True,
         ssl={"ssl": {}}
     )
-load_dotenv()
+
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT DATABASE()")
+    print(cursor.fetchone())
+
+    cursor.execute("SHOW TABLES")
+    print(cursor.fetchall())
+
+    cursor.close()
+
+    return conn
 
 app = Flask(__name__)
 app.secret_key = "freshmate_secret_key"
@@ -52,7 +66,7 @@ def register():
 
         # Check existing email
         cursor.execute(
-            "SELECT * FROM users WHERE email=%s",
+            "SELECT * FROM `user` WHERE email=%s",
             (email,)
         )
 
@@ -66,7 +80,7 @@ def register():
 
         # Insert new user
         cursor.execute(
-            "INSERT INTO users(name,email,password) VALUES(%s,%s,%s)",
+            "INSERT INTO `user`(username,email,password) VALUES(%s,%s,%s)",
             (name, email, password)
         )
 
@@ -94,28 +108,27 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-
         cursor.execute(
-            "SELECT * FROM users WHERE email=%s AND password=%s",
+            "SELECT * FROM user WHERE email=%s AND password=%s",
             (email, password)
         )
 
-        user = cursor.fetchone()
-
+        student = cursor.fetchone()
 
         cursor.close()
         conn.close()
 
+        if student:
+            session['email'] = student['email']
+            session['name'] = student['name']
 
-        if user:
-            session['user'] = user['name']
             return redirect('/dashboard')
 
         else:
             return "Invalid Email or Password"
 
 
-    return render_template("login.html")
+    return render_template('login.html')
 # -------------------------
 # Dashboard
 # -------------------------
@@ -151,12 +164,11 @@ def clubs():
 
     cursor.execute("SELECT * FROM clubs")
 
-    club_data = cursor.fetchall()
+    clubs = cursor.fetchall()
 
-    cursor.close()
-    conn.close()
+   
 
-    return render_template("clubs.html", clubs=club_data)
+    return render_template("clubs.html", clubs=clubs)
 
 
 @app.route('/faculty')
@@ -167,12 +179,12 @@ def faculty():
 
     cursor.execute("SELECT * FROM faculty")
 
-    faculty_data = cursor.fetchall()
-
+    faculty = cursor.fetchall()
+    print(faculty)
     cursor.close()
     conn.close()
 
-    return render_template("faculty.html", faculty=faculty_data)
+    return render_template("faculty.html", faculty=faculty)
 
 @app.route('/timetable')
 def timetable():
@@ -182,12 +194,12 @@ def timetable():
 
     cursor.execute("SELECT * FROM timetable")
 
-    timetable_data = cursor.fetchall()
+    timetable = cursor.fetchall()
 
     cursor.close()
     conn.close()
 
-    return render_template("timetable.html", timetable=timetable_data)
+    return render_template("timetable.html", timetable=timetable)
 
 @app.route('/notices')
 def notices():
@@ -196,15 +208,15 @@ def notices():
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM notices ORDER BY notice_date DESC"
+        "SELECT * FROM notices ORDER BY id DESC"
     )
 
-    notice_data = cursor.fetchall()
+    notices = cursor.fetchall()
 
     cursor.close()
     conn.close()
 
-    return render_template("notices.html", notices=notice_data)
+    return render_template("notices.html", notices=notices)
 
 # -------------------------
 # Chatbot
@@ -252,20 +264,31 @@ Thank you for your patience! 😊
 @app.route('/profile')
 def profile():
 
+    if 'email' not in session:
+        return redirect('/login')
+
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
+
     cursor.execute(
-        "SELECT * FROM users LIMIT 1"
+        "SELECT * FROM user WHERE email=%s",
+        (session['email'],)
     )
 
+
     student = cursor.fetchone()
+
 
     cursor.close()
     conn.close()
 
-    return render_template("profile.html", student=student)
 
+    return render_template(
+        'profile.html',
+        student=student
+    )
 @app.route('/logout')
 def logout():
     session.clear()

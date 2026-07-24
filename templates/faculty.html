@@ -2,35 +2,56 @@
 <html>
 <head>
     <title>Faculty Directory</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
 
 <div class="container mt-5">
 
-<h2 class="text-center mb-4">Faculty Directory</h2>
+<h2 class="text-center mb-4">👨‍🏫 Faculty Directory</h2>
 
 <table class="table table-bordered table-hover">
 
 <tr>
-<th>Name</th>
-<th>Department</th>
-<th>Email</th>
-<th>Cabin</th>
+    <th>Name</th>
+    <th>Department</th>
+    <th>Designation</th>
+    <th>Email</th>
+    <th>Phone</th>
+    <th>Office</th>
 </tr>
 
+
 {% for f in faculty %}
+
 <tr>
-<td>{{ f[1] }}</td>
-<td>{{ f[2] }}</td>
-<td>{{ f[3] }}</td>
-<td>{{ f[4] }}</td>
+
+    <td>{{ f.faculty_name }}</td>
+
+    <td>{{ f.department }}</td>
+
+    <td>{{ f.designation }}</td>
+
+    <td>{{ f.email }}</td>
+
+    <td>{{ f.phone }}</td>
+
+    <td>{{ f.office }}</td>
+
 </tr>
+
 {% endfor %}
+
 
 </table>
 
-<a href="/dashboard" class="btn btn-primary">Back</a>
+
+<a href="/dashboard" class="btn btn-primary">
+Back to Dashboard
+</a>
+
 
 </div>
 

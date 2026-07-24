@@ -10,27 +10,43 @@
 
 <div class="container mt-5">
 
-<h2 class="text-center mb-4">📢 College Notice Board</h2>
+    <h2 class="text-center mb-4">📢 College Notice Board</h2>
 
-{% for notice in notices %}
 
-<div class="card shadow mb-3">
+    {% for notice in notices %}
 
-<div class="card-body">
+    <div class="card shadow mb-3">
 
-<h4>{{ notice[1] }}</h4>
+        <div class="card-body">
 
-<p><strong>Date:</strong> {{ notice[2] }}</p>
+            <h4>{{ notice.title }}</h4>
 
-<p>{{ notice[3] }}</p>
+            <p>
+                <strong>Date:</strong>
+                {{ notice.notice_date }}
+            </p>
 
-</div>
+            <p>
+                {{ notice.description }}
+            </p>
 
-</div>
+        </div>
 
-{% endfor %}
+    </div>
 
-<a href="/dashboard" class="btn btn-primary">Back to Dashboard</a>
+    {% endfor %}
+
+
+    {% if notices|length == 0 %}
+    <div class="alert alert-warning text-center">
+        No notices available.
+    </div>
+    {% endif %}
+
+
+    <a href="/dashboard" class="btn btn-primary">
+        Back to Dashboard
+    </a>
 
 </div>
 
